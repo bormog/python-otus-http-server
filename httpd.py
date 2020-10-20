@@ -51,7 +51,7 @@ def socket_read_data(client_socket: socket.socket, chunk_size: int, max_size: in
 
 class HTTPRequest:
     """
-    Implementation of HTTP request. Can created from raw binary data
+    Implementation of HTTP request
     """
 
     def __init__(self, method: str, path: str, version: str, headers: list,
@@ -146,7 +146,8 @@ class HTTPResponse:
                 descriptor.seek(0, os.SEEK_END)
                 content_length = descriptor.tell()
                 descriptor.seek(position, os.SEEK_SET)
-            self.headers.append('Content-Length: %s' % content_length)
+            finally:
+                self.headers.append('Content-Length: %s' % content_length)
 
         headers = "%s %s\r\n" % (self.version, self.status)
         for header in self.headers:
