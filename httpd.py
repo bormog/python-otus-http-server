@@ -22,7 +22,7 @@ DOCUMENT_ROOT = None
 
 def socket_read_data(client_socket: socket.socket, chunk_size: int, max_size: int) -> bytes:
     """
-    Read data from socket by chunk_size and stop if data contain rnrn
+    Read data from socket by chunk_size and stop if data contain rnrn symbols
 
     :param client_socket: client socket
     :param chunk_size: size of chunk to read from socket
@@ -68,6 +68,12 @@ class HTTPRequest:
 
     @classmethod
     def from_raw(cls, raw: bytes, encoding: str = 'iso-8859-1') -> "HTTPRequest":
+        """
+        Build HTTPRequest object from bytes
+        :param raw: bytes
+        :param encoding: encoding
+        :return: HTTPRequest
+        """
         lines = raw.decode(encoding).split("\r\n")
 
         request_line = lines[0]
@@ -106,6 +112,14 @@ class HTTPResponse:
         self.encoding = encoding
 
     def send(self, sock: socket.socket) -> None:
+        """
+        Calculate Content-Length
+        Convert self to bytes string
+        And send bytes through socket
+
+        :param sock: Client socket through which to send the data
+        :return: None
+        """
 
         if self.content is not None:
             logging.debug('Set body as descriptor = io.BytesIO')
@@ -163,6 +177,14 @@ class HTTPHandler:
         self.request = None
 
     def handle(self) -> None:
+        """
+        Read bytes data from socket
+        Build HTTPRequest
+        Process request
+        Build HTTPResponse
+        And send HTTPResponse via socket
+        :return: None
+        """
         with self.sock:
             self.sock.settimeout(CLIENT_SOCKET_TIMEOUT)
             socket_data = socket_read_data(self.sock, chunk_size=REQUEST_CHUNK_SIZE, max_size=REQUEST_MAX_SIZE)
@@ -212,6 +234,12 @@ class HTTPHandler:
         return self._handle_file()
 
     def _handle_file(self) -> "HTTPResponse":
+        """
+        Get HTTPRequest.path and check if file exists in DOCUMENT ROOT
+        Calculate Content-Length
+        And return HTTPResponse
+        :return: HTTPResponse
+        """
         url = urllib.parse.urlparse(urllib.parse.unquote(self.request.path))
         path = url.path.strip('/')
         if not path:
@@ -268,6 +296,10 @@ class HTTPWorker(threading.Thread):
         self.running = False
 
     def run(self) -> None:
+        """
+        Try to get socket from queue and call HTTPHandler to process request
+        :return: None
+        """
         logging.debug('Worker %s is run now' % str(self))
         self.running = True
         while self.running:
@@ -301,6 +333,12 @@ class HTTPServer:
         self.connection_queue = queue.Queue(self.num_workers * self.backlog)
 
     def serve_forever(self) -> None:
+        """
+        Build N HTTPWorker
+        Initialize server socket
+        Put client connections to queue
+        :return: None
+        """
         workers = []
         for _ in range(self.num_workers):
             worker = HTTPWorker(self.connection_queue)
