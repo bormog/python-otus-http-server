@@ -97,7 +97,7 @@ class HTTPResponse:
                  version: str = 'HTTP/1.0', encoding: str = 'iso-8859-1') -> None:
         self.version = version
         self.status = status
-        self.headers = headers or []
+        self.headers = headers or ['Content-Type: text/plain']
 
         default_headers = [
             'Server: Python HTTP Server',
@@ -210,21 +210,18 @@ class HTTPHandler:
     def handle_bad_request(self) -> "HTTPResponse":
         return HTTPResponse(
             status='400 Bad Request',
-            headers=['Content-Type: text/plain'],
             content='Bad Request'
         )
 
     def handle_method_not_allowed(self) -> "HTTPResponse":
         return HTTPResponse(
             status='405 Method Not Allowed',
-            headers=['Content-Type: text/plain'],
             content='Method Not Allowed'
         )
 
     def handle_not_found(self) -> "HTTPResponse":
         return HTTPResponse(
             status='404 Not Found',
-            headers=['Content-Type: text/plain'],
             content='Not Found'
         )
 
