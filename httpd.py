@@ -365,8 +365,6 @@ class HTTPServer:
 
 
 def main(args):
-    # TODO https://stackoverflow.com/questions/9156537/why-does-a-simple-thin-server-stop-responding-at-16500-requests-when-benchmarkin
-
     logging.info('Start app with arguments %s' % str(args))
     server = HTTPServer(
         host=args.address,
@@ -382,7 +380,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-a', '--address', type=str, default='127.0.0.1', help='Server address. Default=127.0.0.1')
     parser.add_argument('-p', '--port', type=int, default=8080, help='Server port. Default=8080')
-    parser.add_argument('-w', '--num_workers', type=int, default=10, help='Number of workers. Default=10')
+    parser.add_argument('-w', '--num_workers', type=int, default=20, help='Number of workers. Default=20')
     parser.add_argument('-b', '--backlog', type=int, default=10, help='Backlog for each worker. Default=10')
     parser.add_argument('-d', '--documentroot', type=str, default='static', help='Directory with static files')
 
