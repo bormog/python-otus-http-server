@@ -23,6 +23,11 @@ python -a HOST -p PORT -w NUM WORKERS -b BACKLOG -d DOCUMENTROOT httpd.py
 - -b - queue size for each worker, default = 10
 - -d - document root, default = static
 
+### Тесты
+```
+ python -m unittest -v tests.unit.test_httpd
+```
+
 ### Нагрузочное тестирование
 
 ``` sh

@@ -20,6 +20,25 @@ BASE_DIR = os.path.dirname(__file__)
 DOCUMENT_ROOT = None
 
 
+def file_content_length(file_descriptor) -> int:
+    """
+    Calculate file content length
+    :param file_descriptor: file desrcriptor
+    :return: int
+    """
+    content_length = 0
+    try:
+        stat = os.fstat(file_descriptor.fileno())
+        content_length = stat.st_size
+    except OSError:
+        position = file_descriptor.tell()
+        file_descriptor.seek(0, os.SEEK_END)
+        content_length = file_descriptor.tell()
+        file_descriptor.seek(position, os.SEEK_SET)
+    finally:
+        return content_length
+
+
 def socket_read_data(client_socket: socket.socket, chunk_size: int, max_size: int) -> bytes:
     """
     Read data from socket by chunk_size and stop if data contain rnrn symbols
@@ -138,16 +157,8 @@ class HTTPResponse:
                 content_length = int(content_length)
 
         if content_length is None:
-            try:
-                stat = os.fstat(descriptor.fileno())
-                content_length = stat.st_size
-            except OSError:
-                position = descriptor.tell()
-                descriptor.seek(0, os.SEEK_END)
-                content_length = descriptor.tell()
-                descriptor.seek(position, os.SEEK_SET)
-            finally:
-                self.headers.append('Content-Length: %s' % content_length)
+            content_length = file_content_length(descriptor)
+            self.headers.append('Content-Length: %s' % content_length)
 
         headers = "%s %s\r\n" % (self.version, self.status)
         for header in self.headers:
@@ -262,8 +273,7 @@ class HTTPHandler:
             content_type += '; charset=%s' % encoding
 
         with open(filepath, 'rb') as fr:
-            stat = os.fstat(fr.fileno())
-            content_length = stat.st_size
+            content_length = file_content_length(fr)
 
         headers = [
             'Content-Type: %s' % content_type,
