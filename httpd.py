@@ -26,17 +26,12 @@ def file_content_length(file_descriptor) -> int:
     :param file_descriptor: file desrcriptor
     :return: int
     """
-    content_length = 0
-    try:
+    if isinstance(file_descriptor, io.BytesIO):
+        content_length = len(file_descriptor.getvalue())
+    else:
         stat = os.fstat(file_descriptor.fileno())
         content_length = stat.st_size
-    except OSError:
-        position = file_descriptor.tell()
-        file_descriptor.seek(0, os.SEEK_END)
-        content_length = file_descriptor.tell()
-        file_descriptor.seek(position, os.SEEK_SET)
-    finally:
-        return content_length
+    return content_length
 
 
 def socket_read_data(client_socket: socket.socket, chunk_size: int, max_size: int) -> bytes:
