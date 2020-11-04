@@ -55,6 +55,9 @@ def socket_read_data(client_socket: socket.socket, chunk_size: int, max_size: in
             logging.debug('Try to read next chunk from socket ...')
             chunk = client_socket.recv(chunk_size)
             logging.debug('Read socket chunk: %s' % chunk)
+            if chunk == b"":
+                logging.info('Received empty string. Break')
+                break
             data += chunk
         except socket.timeout:
             msg = 'Socket lost connection by timeout: %d, socket: %s' % (client_socket.gettimeout(), str(client_socket))
@@ -196,22 +199,26 @@ class HTTPHandler:
             self.sock.settimeout(CLIENT_SOCKET_TIMEOUT)
             socket_data = socket_read_data(self.sock, chunk_size=REQUEST_CHUNK_SIZE, max_size=REQUEST_MAX_SIZE)
             logging.debug('Read data from socket: %s' % socket_data)
-            try:
-                self.request = HTTPRequest.from_raw(socket_data)
-                logging.info('Request: %s' % str(self.request))
-            except Exception:
-                logging.exception('Cant parse request from socket data: %s' % socket_data)
-                http_response = self.handle_bad_request()
+            if socket_data == b"":
+                logging.info('Client sock lost connection')
+                self.sock.close()
             else:
-                handler_name = 'handle_%s' % self.request.method.lower()
-                if not hasattr(self, handler_name):
-                    handler = self.handle_method_not_allowed
+                try:
+                    self.request = HTTPRequest.from_raw(socket_data)
+                    logging.info('Request: %s' % str(self.request))
+                except Exception:
+                    logging.exception('Cant parse request from socket data: %s' % socket_data)
+                    http_response = self.handle_bad_request()
                 else:
-                    handler = getattr(self, handler_name)
-                http_response = handler()
+                    handler_name = 'handle_%s' % self.request.method.lower()
+                    if not hasattr(self, handler_name):
+                        handler = self.handle_method_not_allowed
+                    else:
+                        handler = getattr(self, handler_name)
+                    http_response = handler()
 
-            logging.info('Response: %s' % str(http_response))
-            http_response.send(self.sock)
+                logging.info('Response: %s' % str(http_response))
+                http_response.send(self.sock)
 
     def handle_bad_request(self) -> "HTTPResponse":
         return HTTPResponse(
