@@ -56,7 +56,7 @@ def socket_read_data(client_socket: socket.socket, chunk_size: int, max_size: in
             chunk = client_socket.recv(chunk_size)
             logging.debug('Read socket chunk: %s' % chunk)
             if chunk == b"":
-                logging.info('Received empty string. Break')
+                logging.debug('Received empty string. Break')
                 break
             data += chunk
         except socket.timeout:
